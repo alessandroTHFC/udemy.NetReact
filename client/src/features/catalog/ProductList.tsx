@@ -1,13 +1,6 @@
-import React from "react";
 import { Product } from "../../app/layout/models/products";
 import {
-  Avatar,
-  Button,
   Grid,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
 } from "@mui/material";
 import ProductCard from "./ProductCard";
 

@@ -1,7 +1,7 @@
 import { Container, CssBaseline } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material";
 import { useState } from "react";
-import Catalog from "../../features/catalog/Catalog";
+import { Outlet } from "react-router-dom";
 import Header from "../../features/catalog/Header";
 
 function App() {
@@ -10,7 +10,7 @@ function App() {
 
   //* Palette Type uses the state variable darkMode and is the variable
   //* inside the theme variable used in the theme provider.
-  //* If darkMode is set to false(default) it will choose second option(light)
+  //* If darkMode is set to false(default) it will choose second option
   const paletteType = darkMode ? "dark" : "light";
 
   //* theme uses the createTheme function which is used by the ThemeProvider component/Wrapper
@@ -33,7 +33,9 @@ function App() {
       <CssBaseline />
       <Header darkMode={darkMode} handleThemeChange={handleThemeChange} />
       <Container>
-        <Catalog />
+        {/* Outlet is feature of react router dom when routing, outlet will be swapped 
+        to whatever components we are routing to */}
+        <Outlet />
       </Container>
     </ThemeProvider>
   );
