@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using API.Entities;
+using Microsoft.AspNetCore.Authentication;
 
 namespace API.Data
 {
@@ -16,5 +17,7 @@ namespace API.Data
 
         //* Defines the dbsets or entities we are using to create the table in database using the products class
         public DbSet<Product> Products { get; set; }
+
+        public DbSet<Basket> Baskets {get; set;}
     }
 }
