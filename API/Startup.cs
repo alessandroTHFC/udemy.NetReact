@@ -53,7 +53,8 @@ namespace API
             // app.UseHttpsRedirection();
             app.UseCors(opt => 
             {
-                opt.AllowAnyHeader().AllowAnyMethod().WithOrigins("http://localhost:3000");
+                // Using AllowCredentials to allow client side cookie passing back and forth.
+                opt.AllowAnyHeader().AllowAnyMethod().AllowCredentials().WithOrigins("http://localhost:3000");
             });
 
             app.UseRouting();

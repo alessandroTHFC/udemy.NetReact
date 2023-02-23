@@ -5,6 +5,7 @@ import { router } from "../router/Routes";
 const sleep = () => new Promise((resolve) => setTimeout(resolve, 500));
 
 axios.defaults.baseURL = "http://localhost:5000/api/";
+axios.defaults.withCredentials = true;
 
 // The code below is a type of arrow function which returns the response data
 // and stores it inside responseBody. It is the shorthanded version of the following:
@@ -76,9 +77,22 @@ const TestErrors = {
   getValidationsError: () => requests.get("buggy/Validation-Error"),
 };
 
+//* Functionality to connect front end with back end API connection points for Basket
+
+const Basket = {
+  get: () => requests.get("basket"),
+
+  //* bellow functionality matches up with AddItemToBasket in basketcontroller.
+  addItem: (productId: number, quantity = 1) =>
+    requests.post(`basket?productId=${productId}&quantity=${quantity}`, {}),
+  removeItem: (productId: number, quantity = 1) =>
+    requests.delete(`basket?productId=${productId}&quantity=${quantity}`),
+};
+
 const agent = {
   Catalog,
   TestErrors,
+  Basket,
 };
 
 export default agent;

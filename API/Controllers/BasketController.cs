@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using API.Data;
 using API.DTOs;
@@ -24,7 +22,7 @@ namespace API.Controllers
         [HttpGet(Name = "GetBasket")]
         public async Task<ActionResult<BasketDto>> GetBasket()
         {
-            var basket = await RetrieveBasket();
+            var basket = await RetrieveBasket(GetbuyerId());
 
             if (basket == null) return NotFound();
             return MapBasketToDto(basket);
@@ -36,7 +34,7 @@ namespace API.Controllers
         public async Task<ActionResult<BasketDto>> AddItemToBasket(int productId, int quantity)
         {
             //get basket
-            var basket = await RetrieveBasket();
+            var basket = await RetrieveBasket(GetbuyerId());
             //create basket
             if (basket == null)
                 basket = CreateBasket();
@@ -60,7 +58,7 @@ namespace API.Controllers
         public async Task<ActionResult> RemoveBasketItem(int productId, int quantity) {
             
             //get basket
-            var basket = await RetrieveBasket();
+            var basket = await RetrieveBasket(GetbuyerId());
             if (basket == null)
                 return NotFound();
             //remove item or reduce quantiy
@@ -72,12 +70,19 @@ namespace API.Controllers
             return BadRequest(new ProblemDetails{Title = "Problem removing item from basket"});
         }
 
-        private async Task<Basket> RetrieveBasket()
+        private async Task<Basket> RetrieveBasket(string buyerId)
         {
-            return  await _context.Baskets
-                        .Include(i => i.Items)
-                        .ThenInclude(p => p.Product)
-                        .FirstOrDefaultAsync(x => x.BuyerId == Request.Cookies["buyerId"]);
+            
+            if (string.IsNullOrEmpty(buyerId))
+            {
+                Response.Cookies.Delete("buyerId");
+                return null;
+            }
+
+            return await _context.Baskets
+                .Include(i => i.Items)
+                .ThenInclude(p => p.Product)
+                .FirstOrDefaultAsync(basket => basket.BuyerId == buyerId);
         }
 
         // Function to create an instance of a basket with buyer id and ads it to the cookies. Adds basket to the store context
@@ -85,7 +90,7 @@ namespace API.Controllers
         {
             var buyerId = Guid.NewGuid().ToString();
             var cookieOptions = new CookieOptions{IsEssential = true, Expires = DateTime.Now.AddDays(30)};
-            Response.Cookies.Append("buyerdId", buyerId, cookieOptions);
+            Response.Cookies.Append("buyerId", buyerId, cookieOptions);
             var basket = new Basket{BuyerId = buyerId};
             _context.Baskets.Add(basket);
             return basket;
@@ -105,10 +110,16 @@ namespace API.Controllers
                     PictureUrl = item.Product.PictureUrl,
                     Type = item.Product.Type,
                     Brand = item.Product.Brand,
-                    Quantity = item.Product.QuantityInStock
+                    Quantity = item.Quantity
 
                 }).ToList()
             };
         }
+
+        private string GetbuyerId()
+        {
+            return User.Identity?.Name ?? Request.Cookies["buyerId"];
+        }
+
     }
 }

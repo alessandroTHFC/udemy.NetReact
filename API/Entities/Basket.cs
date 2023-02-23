@@ -12,6 +12,8 @@ namespace API.Entities
         public string BuyerId { get; set; }
 
         //* Whenever a Basket is made it initialises a List of Basket Items whether there are or arent items in the Basket. 
+
+        
         public List<BasketItem> Items { get; set; } = new List<BasketItem>();
 
         public void AddItem(Product product, int quantity)
