@@ -1,25 +1,26 @@
-import { useEffect, useState } from "react";
-import agent from "../../app/api/agent";
+import { useEffect } from "react";
 import LoadingComponent from "../../app/layout/LoadingComponent";
-import { Product } from "../../app/layout/models/products";
+import { useAppDispatch, useAppSelector } from "../../app/store/configureStore";
+import { fetchProductsAsync, productSelectors } from "./catalogSlice";
 import ProductList from "./ProductList";
 
 export default function Catalog() {
   //* useState variable populates from useEffect fetch call to database and setProducts function call which returns an array of the products.
-  //* useState is expecting Product array which fits the interface imported from products.ts
-  const [products, setProducts] = useState<Product[]>([]);
+  //* useState is expecting Product array which fits the interface imported from products.ts -------STATE NOW CENTRALISED IN SLICE
+  // const [products, setProducts] = useState<Product[]>([]);
 
-  const [Loading, setLoading] = useState(true);
-
+  //* By having our products data stored in the slice we now only fetch it on App Startup
+  //* previous method using local state fetches the data everytime you return to the component
+  const products = useAppSelector(productSelectors.selectAll);
+  const dispatch = useAppDispatch();
+  const { productsLoaded, status } = useAppSelector((state) => state.catalog);
   //* useEffect is using the fetch call to the API product list, returning as json, then as data.
   useEffect(() => {
-    agent.Catalog.list()
-      .then((products) => setProducts(products))
-      .catch((error) => console.log(error))
-      .finally(() => setLoading(false));
-  }, []);
+    if (!productsLoaded) dispatch(fetchProductsAsync());
+  }, [productsLoaded, dispatch]);
 
-  if (Loading) return <LoadingComponent message="Loading Catalog..." />;
+  if (status.includes("pending"))
+    return <LoadingComponent message="Loading Catalog..." />;
 
   return (
     <>

@@ -8,11 +8,12 @@ import {
   Typography,
 } from "@mui/material";
 import { useStoreContext } from "../../app/context/StoreContext";
+import { useAppSelector } from "../../app/store/configureStore";
 import { currencyFormat } from "../../app/utils/Utils";
 
 export default function BasketSummary() {
   //* get basket from storecontext
-  const { basket } = useStoreContext();
+  const { basket } = useAppSelector((state) => state.basket);
   //* reduce basket array
   //* get subtotal
   // reduce function is creating a sum(end result) and getting the quantity

@@ -12,23 +12,31 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import agent from "../../app/api/agent";
-import { useStoreContext } from "../../app/context/StoreContext";
 import NotFound from "../../app/errors/NotFound";
 import LoadingComponent from "../../app/layout/LoadingComponent";
-import { Product } from "../../app/layout/models/products";
+import { useAppDispatch, useAppSelector } from "../../app/store/configureStore";
+import {
+  addBasketItemsAsync,
+  removeBasketItemAsync,
+} from "../basket/basketSlice";
+import { fetchProductAsync, productSelectors } from "./catalogSlice";
 
 function ProductDetails() {
-  const { id } = useParams();
-  // Get basket from context
-  const { basket, setBasket, removeItem } = useStoreContext();
-  const [product, setProduct] = useState<Product | null>(null);
-  // first loading occurs on getting data from API
-  const [loading, setLoading] = useState(true);
+  const { id } = useParams<{ id: string }>();
+  // Get basket from basketSlice
+  const { basket, status } = useAppSelector((state) => state.basket);
+  const { status: productStatus } = useAppSelector((state) => state.catalog); //syntax status: product status differentiates it from the status coming from the basketSlice
+  const dispatch = useAppDispatch();
+  // const [product, setProduct] = useState<Product | null>(null);  //! This line is depreciated as state is now kept in the store, not local state
+  const product = useAppSelector(
+    (state) => productSelectors.selectById(state, id!) //!had to put ! here because was complaining about string being string | undefined....no idea
+  );
+  // first loading occurs on getting data from API ---- //!Depreciated because of centralised store
+  //* const [loading, setLoading] = useState(true);
   // check how many of the item user already has in basket
   const [quantity, setQuantity] = useState(0);
   // Seperate Loading indicator for when we update the quantity inside basket inside API
-  const [submitting, setSubmitting] = useState(false);
+  // const [submitting, setSubmitting] = useState(false); //!Depreciated
   const item = basket?.items.find((i) => i.productId === product?.id);
 
   // Because the Id is a string, we need to parse it first as an int
@@ -39,12 +47,8 @@ function ProductDetails() {
   //* on this current productDetails page then below, set the quantity(local state) to the quantity in the basket
   useEffect(() => {
     if (item) setQuantity(item.quantity);
-    id &&
-      agent.Catalog.details(parseInt(id))
-        .then((response) => setProduct(response))
-        .catch((error) => console.log(error))
-        .finally(() => setLoading(false));
-  }, [id, item]);
+    if (!product && id) dispatch(fetchProductAsync(parseInt(id)));
+  }, [id, item, dispatch, product]);
 
   //* Function to deal with the quantity in cart input
   //* uses the the event on change of the input field to re-set the quantity in cart.
@@ -60,28 +64,52 @@ function ProductDetails() {
   //* If the item does not exist in the basket then we can add it to the basket
   //* Logic needs to cover 3 aspects: 1) Are we removing/ reducing items from the cart? 2)Are we Adding to existing in cart? 3) Adding new Item
   function handleUpdateCart() {
-    setSubmitting(true);
     // need to check if we have an item?
     // need to check if we the local state (quantity) is greater than the item(API) quantity
     // (if this is true means that we have 'increased' the quantity locally and will need to update the API/basket)
     // (if false (item doesnt exist) means we just add quantity because we are adding a new item, no existing quantity to alter)
     if (!item || quantity > item.quantity) {
       const updatedQuantity = item ? quantity - item.quantity : quantity;
-      agent.Basket.addItem(product?.id!, updatedQuantity)
-        .then((basket) => setBasket(basket))
-        .catch((error) => console.log(error))
-        .finally(() => setSubmitting(false));
+      dispatch(
+        addBasketItemsAsync({
+          productId: product?.id!,
+          quantity: updatedQuantity,
+        })
+      );
+
+      // ================================================================================\\
+      //*Below commented out code is before we centralised API calls to the basketSlice.
+      // agent.Basket.addItem(product?.id!, updatedQuantity)
+      //   .then((basket) => dispatch(setBasket(basket)))
+      //   .catch((error) => console.log(error))
+      //   .finally(() => setSubmitting(false));
+      // ================================================================================\\
     } else {
       // if we do have the item or the quantity is less than the item.quantity
       const updatedQuantity = item.quantity - quantity;
-      agent.Basket.removeItem(product?.id!, updatedQuantity)
-        .then(() => removeItem(product?.id!, updatedQuantity))
-        .catch((error) => console.log(error))
-        .finally(() => setSubmitting(false));
+      dispatch(
+        removeBasketItemAsync({
+          productId: product?.id!,
+          quantity: updatedQuantity,
+        })
+      );
+
+      // ================================================================================\\
+      //*Below commented out code is before we centralised API calls to the basketSlice.
+      // agent.Basket.removeItem(product?.id!, updatedQuantity)
+      //   .then(() =>
+      //     dispatch(
+      //       removeItem({ productId: product?.id!, quantity: updatedQuantity })
+      //     )
+      //   )
+      //   .catch((error) => console.log(error))
+      //   .finally(() => setSubmitting(false));
+      // ================================================================================\\
     }
   }
 
-  if (loading) return <LoadingComponent message="Loading Product..." />;
+  if (productStatus.includes("pending"))
+    return <LoadingComponent message="Loading Product..." />;
 
   if (!product) return <NotFound />;
 
@@ -151,6 +179,7 @@ function ProductDetails() {
           </Grid>
           <Grid item xs={6}>
             <LoadingButton
+              loading={status.includes("pending")}
               sx={{ height: "55px" }}
               color="primary"
               size="large"

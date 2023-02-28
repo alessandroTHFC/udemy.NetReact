@@ -9,29 +9,30 @@ import {
   CardMedia,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
 import { Link } from "react-router-dom";
-import agent from "../../app/api/agent";
-import { useStoreContext } from "../../app/context/StoreContext";
-import { Product } from "../../app/layout/models/products";
+import { Product } from "../../app/models/products";
+import { useAppDispatch, useAppSelector } from "../../app/store/configureStore";
 import { currencyFormat } from "../../app/utils/Utils";
+import { addBasketItemsAsync } from "../basket/basketSlice";
 
 interface Props {
   product: Product;
 }
 
 export default function ProductCard({ product }: Props) {
-  const [Loading, setLoading] = useState(false);
+  const { status } = useAppSelector((state) => state.basket);
 
-  const { setBasket } = useStoreContext();
+  const dispatch = useAppDispatch();
 
-  function handleAddItem(productId: number) {
-    setLoading(true);
-    agent.Basket.addItem(productId)
-      .then((basket) => setBasket(basket))
-      .catch((error) => console.log(error))
-      .finally(() => setLoading(false));
-  }
+  // ! below function is how we would be handling our API calls (in this case adding an item)
+  // ! before we centralised all our API calls into our slices from Redux Toolkit
+  // function handleAddItem(productId: number) {
+  //   setLoading(true);
+  //   agent.Basket.addItem(productId)
+  //     .then((basket) => dispatch(setBasket(basket)))
+  //     .catch((error) => console.log(error))
+  //     .finally(() => setLoading(false));
+  // }
 
   return (
     <Card>
@@ -65,8 +66,11 @@ export default function ProductCard({ product }: Props) {
       </CardContent>
       <CardActions>
         <LoadingButton
-          loading={Loading}
-          onClick={() => handleAddItem(product.id)}
+          // concat product id to pendingAddItem to make the loading specific to the item clicked instead of all items. See basketSlice ln 51
+          loading={status.includes("pendingAddItem" + product.id)}
+          onClick={() =>
+            dispatch(addBasketItemsAsync({ productId: product.id }))
+          }
           size="small"
         >
           Add to Cart

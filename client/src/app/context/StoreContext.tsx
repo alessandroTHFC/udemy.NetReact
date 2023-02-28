@@ -1,5 +1,5 @@
 import { createContext, PropsWithChildren, useContext, useState } from "react";
-import { Basket } from "../layout/models/basket";
+import { Basket } from "../models/basket";
 
 //* Declaring interface for StoreContextValue
 //* the interface is a "what to expect" structure.
