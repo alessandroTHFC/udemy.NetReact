@@ -1,5 +1,4 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { act } from "@testing-library/react";
 import agent from "../../app/api/agent";
 import { Basket } from "../../app/models/basket";
 

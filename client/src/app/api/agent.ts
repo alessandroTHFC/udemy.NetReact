@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { toast } from "react-toastify";
+import { PaginatedResponse } from "../models/pagination";
 import { router } from "../router/Routes";
 
 const sleep = () => new Promise((resolve) => setTimeout(resolve, 500));
@@ -14,10 +15,20 @@ axios.defaults.withCredentials = true;
 //! }
 
 const responseBody = (response: AxiosResponse) => response.data;
-
+//* Everytime we get a response from the API it will hit this interceptor allowing us to get access to the reponse and response header
 axios.interceptors.response.use(
   async (response) => {
     await sleep();
+    //* COMMENT: Pagination handling. It is from here that we will retrieve the pagination details from the reponse header
+    //* creating a new instance of the Paginated Response Class and giving this object the values we need.
+    const pagination = response.headers["pagination"];
+    if (pagination) {
+      response.data = new PaginatedResponse(
+        response.data,
+        JSON.parse(pagination)
+      );
+      return response;
+    }
     return response;
   },
   (error: AxiosError) => {
@@ -50,7 +61,8 @@ axios.interceptors.response.use(
 
 const requests = {
   // used for getting information from the server
-  get: (url: string) => axios.get(url).then(responseBody),
+  get: (url: string, params?: URLSearchParams) =>
+    axios.get(url, { params }).then(responseBody),
   // POST: used for creating a resource to the server
   // When sending data to the server PUT and POST use a body (presumably the information being sent)
   // which is in the form of an object (body: {})
@@ -65,8 +77,9 @@ const requests = {
 // One API call gets the entire product LIST
 // The other one gets the product DETAILS
 const Catalog = {
-  list: () => requests.get("products"),
+  list: (params: URLSearchParams) => requests.get("products", params),
   details: (id: number) => requests.get(`products/${id}`),
+  fetchFilters: () => requests.get("products/filters"),
 };
 
 const TestErrors = {
