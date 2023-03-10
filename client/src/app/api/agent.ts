@@ -2,6 +2,7 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 import { toast } from "react-toastify";
 import { PaginatedResponse } from "../models/pagination";
 import { router } from "../router/Routes";
+import { store } from "../store/configureStore";
 
 const sleep = () => new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -15,6 +16,15 @@ axios.defaults.withCredentials = true;
 //! }
 
 const responseBody = (response: AxiosResponse) => response.data;
+
+//* Once token has been set in accountSlice fetchCurrentUser to our redux store
+//* this interceptor will go into the store and if it exists will attatch token to auth header to our request.
+axios.interceptors.request.use((config) => {
+  const token = store.getState().account.user?.token;
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
 //* Everytime we get a response from the API it will hit this interceptor allowing us to get access to the reponse and response header
 axios.interceptors.response.use(
   async (response) => {
@@ -102,10 +112,17 @@ const Basket = {
     requests.delete(`basket?productId=${productId}&quantity=${quantity}`),
 };
 
+const Account = {
+  login: (values: any) => requests.post("account/login", values),
+  register: (values: any) => requests.post("account/register", values),
+  currentUser: () => requests.get("account/currentUser"),
+};
+
 const agent = {
   Catalog,
   TestErrors,
   Basket,
+  Account,
 };
 
 export default agent;

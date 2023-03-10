@@ -1,36 +1,35 @@
 import { Container, CssBaseline } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import Header from "../../features/catalog/Header";
+import Header from "./Header";
 import "react-toastify/dist/ReactToastify.css";
-import { useStoreContext } from "../context/StoreContext";
-import { getCookie } from "../utils/Utils";
-import agent from "../api/agent";
 import LoadingComponent from "./LoadingComponent";
 import { useAppDispatch } from "../store/configureStore";
-import { setBasket } from "../../features/basket/basketSlice";
+import { fetchBasketAsync } from "../../features/basket/basketSlice";
+import { fetchCurrentUser } from "../../features/account/accountSlice";
 
 function App() {
   const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(true);
+
+  const initApp = useCallback(async () => {
+    try {
+      await dispatch(fetchCurrentUser());
+      await dispatch(fetchBasketAsync());
+    } catch (error: any) {
+      console.log(error);
+    }
+  }, [dispatch]);
 
   //* use effect to fetch basket on app start if there is one
   //* uses the get cookie function to get the buyerid cookie from the browser
   //* also sets the loading state to false so the loading spinner stops.
   //* setBasket functionality now being provided by React Context in StoreContext
   useEffect(() => {
-    const buyerId = getCookie("buyerId");
-    if (buyerId) {
-      agent.Basket.get()
-        .then((basket) => dispatch(setBasket(basket)))
-        .catch((error) => console.log(error))
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
-  }, [dispatch]);
+    initApp().then(() => setLoading(false));
+  }, [initApp]);
 
   //* useState to handle the changing of modes
   const [darkMode, setDarkMode] = useState(false);

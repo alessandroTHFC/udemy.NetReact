@@ -28,6 +28,7 @@ function getAxiosParams(productParams: ProductParams) {
   params.append("orderBy", productParams.orderBy);
   if (productParams.searchTerm)
     params.append("searchTerm", productParams.searchTerm);
+
   //* Checking if greater than 0 to only send up to query string if there is a brand to search for
   //* otherwise sends brands= and nothing in the query string which is unnecessary
   if (productParams.brands.length > 0)

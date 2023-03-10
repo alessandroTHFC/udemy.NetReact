@@ -30,6 +30,7 @@ export default function Catalog() {
   //* previous method using local state fetches the data everytime you return to the component
   const products = useAppSelector(productSelectors.selectAll);
   const dispatch = useAppDispatch();
+
   //* Below are all variables we are pulling from our Catalog state inside catalogSlice.
   const {
     productsLoaded,
@@ -39,10 +40,12 @@ export default function Catalog() {
     productParams,
     metaData,
   } = useAppSelector((state) => state.catalog);
+
   //* COMMENT:  useEffect is using the fetch call to the API product list, returning as json, then as data.
   useEffect(() => {
     if (!productsLoaded) dispatch(fetchProductsAsync());
   }, [productsLoaded, dispatch]);
+
   //* COMMENT: Secondary useEffect because having filtersLoaded in above was causing secondary unnecessary API call
   //* On products loaded when filtersLoaded was changing to true.
   useEffect(() => {
