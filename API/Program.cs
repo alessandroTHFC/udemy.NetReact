@@ -51,7 +51,7 @@ var builder = WebApplication.CreateBuilder(args);
                 //* COMMENT: Prevents duplicate emails in database. e.g. 2 users with same Email address. 
                 opt.User.RequireUniqueEmail = true;
             })
-                .AddRoles<IdentityRole>()
+                .AddRoles<Role>()
                 .AddEntityFrameworkStores<StoreContext>();
             
             //* COMMENT: authentication - users will present token inside auth header in http request, server will then check for validity

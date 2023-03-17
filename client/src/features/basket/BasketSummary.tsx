@@ -5,13 +5,15 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Typography,
 } from "@mui/material";
-import { useStoreContext } from "../../app/context/StoreContext";
 import { useAppSelector } from "../../app/store/configureStore";
 import { currencyFormat } from "../../app/utils/Utils";
 
-export default function BasketSummary() {
+interface Props {
+  subtotal?: number;
+}
+
+export default function BasketSummary({ subtotal }: Props) {
   //* get basket from storecontext
   const { basket } = useAppSelector((state) => state.basket);
   //* reduce basket array
@@ -19,11 +21,16 @@ export default function BasketSummary() {
   // reduce function is creating a sum(end result) and getting the quantity
   // multiplied by the price of each item. first 0 means start from 0. Second zero means
   // if the subtotal is undefined(empty basket) then return 0
-  const subtotal =
-    basket?.items.reduce((sum, item) => sum + item.quantity * item.price, 0) ??
-    0;
+  if (subtotal === undefined) {
+    subtotal =
+      basket?.items.reduce(
+        (sum, item) => sum + item.quantity * item.price,
+        0
+      ) ?? 0;
+  }
+
   // conditional for if value is over 100.
-  const deliveryFee = subtotal > 10000 ? 0 : 500;
+  const deliveryFee = subtotal! > 10000 ? 0 : 500;
 
   return (
     <>
@@ -32,7 +39,7 @@ export default function BasketSummary() {
           <TableBody>
             <TableRow>
               <TableCell colSpan={2}>Subtotal</TableCell>
-              <TableCell align="right">{currencyFormat(subtotal)}</TableCell>
+              <TableCell align="right">{currencyFormat(subtotal!)}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell colSpan={2}>Delivery fee*</TableCell>
@@ -41,7 +48,7 @@ export default function BasketSummary() {
             <TableRow>
               <TableCell colSpan={2}>Total</TableCell>
               <TableCell align="right">
-                {currencyFormat(subtotal + deliveryFee)}
+                {currencyFormat(subtotal! + deliveryFee)}
               </TableCell>
             </TableRow>
             <TableRow>
