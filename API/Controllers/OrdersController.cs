@@ -94,6 +94,7 @@ namespace API.Controllers
                 ShippingAddress = orderDto.ShippingAddress,
                 Subtotal = subtotal,
                 DeliveryFee = deliveryFee,
+                PaymentIntentId = basket.PaymentIntentId,
             };
             //* Tracking and save to database.
             _context.Orders.Add(order);
